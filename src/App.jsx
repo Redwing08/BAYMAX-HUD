@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
+import HudModulePage from './HudModulePage';
 
-// FORMAL, PROFESSIONAL SVG ICONS
 const Model3DIcon = () => (
   <svg className="stark-hud-icon" viewBox="0 0 24 24">
     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
@@ -40,7 +40,6 @@ const ImageEngineIcon = () => (
   </svg>
 );
 
-// FORMAL SPEECH / CHAT BUBBLE ICON FOR THE CENTRAL REACTOR
 const FormalSpeechIcon = () => (
   <svg className="arc-reactor-svg" viewBox="0 0 24 24">
     <path
@@ -71,7 +70,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadProgress, setLoadProgress] = useState(0);
 
-  const [timeData, setTimeData] = useState({ main: '15:12', sec: '03', date: 'AUG 9, 2026' });
+  const [timeData, setTimeData] = useState({ main: '15:12', sec: '03', date: 'AUG 10, 2026' });
   const [deviceStats, setDeviceStats] = useState({ cpu: 36, memory: 4.9, network: 217 });
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -81,6 +80,9 @@ export default function App() {
   const canvasRef = useRef(null);
   const dragStartX = useRef(0);
 
+  const [activeModal, setActiveModal] = useState(null);
+  const [isClosingModal, setIsClosingModal] = useState(false);
+
   const [messages, setMessages] = useState([
     { sender: 'BAYMAX', text: 'Hello, I am Baymax. How may I assist your system today?' }
   ]);
@@ -88,14 +90,43 @@ export default function App() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const navItems = [
-    { label: '3D Model Engine', icon: <Model3DIcon /> },
-    { label: 'Encrypt / Decrypt', icon: <EncryptIcon /> },
-    { label: 'System Simulator', icon: <SimulateIcon /> },
-    { label: 'Code Generator', icon: <CodeGenIcon /> },
-    { label: 'Image Engine', icon: <ImageEngineIcon /> }
+    { label: '3D Model Engine', icon: <Model3DIcon />, desc: 'Inspect structural blueprints, diagnostic layouts, and holographic telemetry sub-layers in real-time.' },
+    { label: 'Encrypt / Decrypt', icon: <EncryptIcon />, desc: 'Secure local terminal communication protocols with advanced cryptographic keys and packet scrambling.' },
+    { label: 'System Simulator', icon: <SimulateIcon />, desc: 'Run sandbox neural diagnostics, physical stress tests, and automated feedback loops.' },
+    { label: 'Code Generator', icon: <CodeGenIcon />, desc: 'Synthesize boilerplate code fragments, shell scripts, and responsive component logic.' },
+    { label: 'Image Engine', icon: <ImageEngineIcon />, desc: 'Process high-definition HUD assets, render filter pipelines, and optimize graphics buffers.' }
   ];
 
   const totalItems = navItems.length;
+
+  // Synthesizes a futuristic UI audio beep via Web Audio API
+  const playHudSound = (type = 'blip') => {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    const now = ctx.currentTime;
+
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(400, now);
+    osc.frequency.setValueAtTime(800, now + 0.03);
+
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.linearRampToValueAtTime(0.01, now + 0.06);
+
+    osc.start(now);
+    osc.stop(now + 0.06);
+  } catch (e) {
+    // Fallback
+  }
+};
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -198,11 +229,44 @@ export default function App() {
 
     const threshold = 35;
     if (dragOffset < -threshold) {
-      setActiveIndex((prev) => (prev + 1) % totalItems);
+      setActiveIndex((prev) => {
+        const next = (prev + 1) % totalItems;
+        playHudSound('blip');
+        return next;
+      });
     } else if (dragOffset > threshold) {
-      setActiveIndex((prev) => (prev - 1 + totalItems) % totalItems);
+      setActiveIndex((prev) => {
+        const next = (prev - 1 + totalItems) % totalItems;
+        playHudSound('blip');
+        return next;
+      });
     }
     setDragOffset(0);
+  };
+
+  const handleNodeClick = (index) => {
+    playHudSound('blip');
+    if (index === activeIndex) {
+      playHudSound('click');
+      setIsClosingModal(false);
+      setActiveModal(navItems[index]);
+    } else {
+      setActiveIndex(index);
+    }
+  };
+
+  const handleDotClick = (i) => {
+    playHudSound('blip');
+    setActiveIndex(i);
+  };
+
+  const closeModal = () => {
+    playHudSound('click');
+    setIsClosingModal(true);
+    setTimeout(() => {
+      setActiveModal(null);
+      setIsClosingModal(false);
+    }, 300);
   };
 
   const handleQuery = async (e) => {
@@ -237,7 +301,7 @@ export default function App() {
     }
   };
 
-  const spacing = 95;
+  const spacing = 175;
 
   if (isLoading) {
     return (
@@ -255,7 +319,7 @@ export default function App() {
           <div className="holomat-corner corner-br"></div>
 
           <div className="holomat-content">
-            <div className="holomat-title">SAN FRANSOKYO</div>
+            <div className="holomat-title">AI ASSISTANT</div>
             <div className="holomat-ai-tag">HEALTHCARE AI:</div>
             <div className="holomat-ai-name">B.A.Y.M.A.X</div>
 
@@ -268,19 +332,19 @@ export default function App() {
             <div className="holomat-diag-list">
               <div className={`holomat-diag-row ${loadProgress >= 25 ? 'active' : ''}`}>
                 <span className="diag-label">CORE SYSTEMS</span>
-                <span className="diag-status">• ONLINE</span>
+                <span className="diag-status">&bull; ONLINE</span>
               </div>
               <div className={`holomat-diag-row ${loadProgress >= 50 ? 'active' : ''}`}>
                 <span className="diag-label">AI ROUTINES</span>
-                <span className="diag-status">• ACTIVATED</span>
+                <span className="diag-status">&bull; ACTIVATED</span>
               </div>
               <div className={`holomat-diag-row ${loadProgress >= 75 ? 'active' : ''}`}>
                 <span className="diag-label">INTERFACE</span>
-                <span className="diag-status">• CALIBRATED</span>
+                <span className="diag-status">&bull; CALIBRATED</span>
               </div>
               <div className={`holomat-diag-row ${loadProgress >= 95 ? 'active' : ''}`}>
                 <span className="diag-label">HOLOGRAPHIC SYSTEMS</span>
-                <span className="diag-status">• READY</span>
+                <span className="diag-status">&bull; READY</span>
               </div>
             </div>
 
@@ -301,7 +365,7 @@ export default function App() {
       <div className="hud-corner bottom-right"></div>
 
       <div className="hud-header">
-        <div className="system-op-tag">• SYSTEM OPERATIONAL •</div>
+        <div className="system-op-tag">&bull; SYSTEM OPERATIONAL &bull;</div>
         <h1 className="main-title">B.A.Y.M.A.X</h1>
         <div className="subtitle-tag">Biomedical Automated Yield-Optimizing Medical Assistant eXperiment</div>
         <div className="title-underline"></div>
@@ -310,7 +374,7 @@ export default function App() {
       <div className="widget-telemetry">
         <div className="telemetry-date-row">
           <span>{timeData.date}</span>
-          <span className="synced-tag">• SYNCED</span>
+          <span className="synced-tag">&bull; SYNCED</span>
         </div>
 
         <div className="telemetry-time-row">
@@ -375,14 +439,14 @@ export default function App() {
               if (Math.abs(xPos) > spacing * 1.8) return null;
 
               const isCenter = Math.abs(xPos) < spacing / 2;
-              const scale = isCenter ? 1.25 : 0.85;
+              const scale = isCenter ? 1.2 : 0.82;
               const opacity = isCenter ? 1 : 0.45;
 
               return (
                 <div
                   key={item.label}
                   className={`carousel-node ${isCenter ? 'active' : ''}`}
-                  onClick={() => setActiveIndex(index)}
+                  onClick={() => handleNodeClick(index)}
                   style={{
                     transform: `translateX(${xPos}px) scale(${scale})`,
                     opacity: opacity,
@@ -404,7 +468,7 @@ export default function App() {
           <div
             key={i}
             className={`dot ${i === activeIndex ? 'active' : ''}`}
-            onClick={() => setActiveIndex(i)}
+            onClick={() => handleDotClick(i)}
           />
         ))}
       </div>
@@ -428,7 +492,20 @@ export default function App() {
         </form>
       </div>
 
-      <div className="bottom-footer-tag">• 2026• SYSTEM ACTIVE •</div>
+      {activeModal && (
+        <div className={`laser-modal-overlay ${isClosingModal ? 'closing' : ''}`}>
+          <div className={`laser-beam-line ${isClosingModal ? 'closing' : ''}`}>
+            <div style={{ position: 'absolute', top: '15px', right: '20px', zIndex: 1010 }}>
+              <button className="hud-close-btn" onClick={closeModal} title="Close Module">
+                &times;
+              </button>
+            </div>
+            <HudModulePage moduleData={activeModal} />
+          </div>
+        </div>
+      )}
+
+      <div className="bottom-footer-tag">&bull; 2026 &bull; SYSTEM ACTIVE &bull;</div>
     </div>
   );
 }
