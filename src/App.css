@@ -475,8 +475,8 @@ html, body {
 }
 .bottom-carousel-viewport {
   position: relative;
-  width: min(96vw, 750px);
-  height: clamp(140px, 22vh, 200px);
+  width: min(65vw, 500px);
+  height: clamp(100px, 50vh, 200px);
   display: flex;
   justify-content: center;
   align-items: center;

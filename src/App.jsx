@@ -99,34 +99,33 @@ export default function App() {
 
   const totalItems = navItems.length;
 
-  // Synthesizes a futuristic UI audio beep via Web Audio API
   const playHudSound = (type = 'blip') => {
-  try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
 
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
 
-    osc.connect(gain);
-    gain.connect(ctx.destination);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
 
-    const now = ctx.currentTime;
+      const now = ctx.currentTime;
 
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(400, now);
-    osc.frequency.setValueAtTime(800, now + 0.03);
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(400, now);
+      osc.frequency.setValueAtTime(800, now + 0.03);
 
-    gain.gain.setValueAtTime(0.08, now);
-    gain.gain.linearRampToValueAtTime(0.01, now + 0.06);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.06);
 
-    osc.start(now);
-    osc.stop(now + 0.06);
-  } catch (e) {
-    // Fallback
-  }
-};
+      osc.start(now);
+      osc.stop(now + 0.06);
+    } catch (e) {
+      // Fallback
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -151,19 +150,25 @@ export default function App() {
     const ctx = canvas.getContext('2d');
 
     let animationFrameId;
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
     const stars = Array.from({ length: 140 }, () => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
       size: Math.random() * 1.5,
       alpha: Math.random(),
       speed: 0.005 + Math.random() * 0.015
     }));
 
     const render = () => {
-      ctx.clearRect(0, 0, width, height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       stars.forEach((star) => {
         star.alpha += star.speed;
         if (star.alpha > 1 || star.alpha < 0) star.speed = -star.speed;
@@ -177,15 +182,9 @@ export default function App() {
 
     render();
 
-    const handleResize = () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-    };
-    window.addEventListener('resize', handleResize);
-
     return () => {
       cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', resizeCanvas);
     };
   }, [isLoading]);
 
